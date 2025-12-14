@@ -34,7 +34,7 @@ That's it! Webber will:
 **Step 1:** Download Webber
 ```bash
 Git clone
-git clone https://your-repo/webber.git
+git clone https://github.com/pranav-pradeesh/Webber.git
 cd webber
 ```
 

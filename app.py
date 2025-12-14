@@ -1,480 +1,552 @@
+#!/usr/bin/env python3
 """
-Website Engagement Bot API
-Simulates realistic user behavior to improve engagement metrics for any website
+╦ ╦╔═╗╔╗ ╔╗ ╔═╗╦═╗
+║║║║╣ ╠╩╗╠╩╗║╣ ╠╦╝
+╚╩╝╚═╝╚═╝╚═╝╚═╝╩╚═
+Advanced Web Traffic Simulator
+For HTB/CTF and Authorized Testing Only
 """
 
 import sys
 import time
 import os
 import json
-from urllib.parse import quote_plus, urljoin, urlparse
-import re
-import threading
-from datetime import datetime
 import random
+import threading
+import argparse
+import subprocess
+from datetime import datetime
+from collections import deque
+from urllib.parse import quote_plus, urljoin, urlparse
+import uuid
+import platform
 
+# Required libraries with import check
+REQUIRED_PACKAGES = {
+    'requests': 'requests',
+    'bs4': 'beautifulsoup4',
+    'psutil': 'psutil'
+}
+
+def check_and_install_dependencies():
+    """Check for required packages and offer to install missing ones"""
+    missing_packages = []
+    
+    # Check each required package
+    for import_name, package_name in REQUIRED_PACKAGES.items():
+        try:
+            __import__(import_name)
+        except ImportError:
+            missing_packages.append(package_name)
+    
+    if not missing_packages:
+        return True
+    
+    # Display missing packages
+    print(f"\n{Colors.RED}╔═══════════════════════════════════════╗{Colors.ENDC}")
+    print(f"{Colors.RED}║   MISSING REQUIRED DEPENDENCIES      ║{Colors.ENDC}")
+    print(f"{Colors.RED}╚═══════════════════════════════════════╝{Colors.ENDC}\n")
+    
+    print(f"{Colors.YELLOW}The following packages are required:{Colors.ENDC}")
+    for pkg in missing_packages:
+        print(f"  • {pkg}")
+    
+    print(f"\n{Colors.CYAN}Would you like to install them automatically?{Colors.ENDC}")
+    choice = input(f"{Colors.GREEN}[Y/n]: {Colors.ENDC}").strip().lower()
+    
+    if choice in ['', 'y', 'yes']:
+        return install_packages(missing_packages)
+    else:
+        print(f"\n{Colors.YELLOW}Manual installation command:{Colors.ENDC}")
+        print(f"  pip install {' '.join(missing_packages)}")
+        print(f"\n{Colors.RED}Exiting...{Colors.ENDC}\n")
+        return False
+
+def install_packages(packages):
+    """Install packages using pip"""
+    print(f"\n{Colors.CYAN}Installing packages...{Colors.ENDC}\n")
+    
+    # Determine pip command
+    pip_commands = ['pip3', 'pip', 'python3 -m pip', 'python -m pip']
+    pip_cmd = None
+    
+    for cmd in pip_commands:
+        try:
+            result = subprocess.run(
+                cmd.split() + ['--version'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                pip_cmd = cmd.split()
+                break
+        except (subprocess.SubprocessError, FileNotFoundError):
+            continue
+    
+    if not pip_cmd:
+        print(f"{Colors.RED}[ERROR]{Colors.ENDC} Could not find pip!")
+        print(f"{Colors.YELLOW}Please install pip first or manually install:{Colors.ENDC}")
+        print(f"  pip install {' '.join(packages)}")
+        return False
+    
+    # Install each package
+    for package in packages:
+        print(f"{Colors.CYAN}Installing {package}...{Colors.ENDC}")
+        try:
+            result = subprocess.run(
+                pip_cmd + ['install', package],
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+            
+            if result.returncode == 0:
+                print(f"{Colors.GREEN}[✓]{Colors.ENDC} {package} installed successfully")
+            else:
+                print(f"{Colors.RED}[✗]{Colors.ENDC} Failed to install {package}")
+                print(f"{Colors.YELLOW}Error: {result.stderr[:200]}{Colors.ENDC}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            print(f"{Colors.RED}[✗]{Colors.ENDC} Installation timeout for {package}")
+            return False
+        except Exception as e:
+            print(f"{Colors.RED}[✗]{Colors.ENDC} Error installing {package}: {e}")
+            return False
+    
+    print(f"\n{Colors.GREEN}[✓] All dependencies installed!{Colors.ENDC}")
+    print(f"{Colors.CYAN}Please restart Webber to continue.{Colors.ENDC}\n")
+    return False  # Return False to restart
+
+# Try importing after potential installation
 try:
     import requests
     from bs4 import BeautifulSoup
-    from flask import Flask, jsonify, request
-    from flask_cors import CORS
+    import psutil
     DEPENDENCIES_OK = True
 except ImportError:
     DEPENDENCIES_OK = False
-    print("Missing dependencies! Install: pip install requests beautifulsoup4 flask flask-cors")
 
-# Check if running in Termux
+# Detect environment
 IS_TERMUX = os.path.exists('/data/data/com.termux')
+IS_ANDROID = 'ANDROID_ROOT' in os.environ or IS_TERMUX
+PLATFORM = platform.system()
 
-# Global variables for bot control
-bot_status = {
+# ANSI Colors
+class Colors:
+    HEADER = '\033[95m'
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    MAGENTA = '\033[95m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+# Global state
+webber_state = {
     'running': False,
-    'run_count': 0,
-    'last_run_time': None,
-    'current_phase': 'Idle',
-    'total_pages_visited': 0,
-    'total_time_spent': 0,
-    'engagement_score': 0,
-    'results': [],
-    'latest_summary': {}
+    'stats': {
+        'cycles': 0,
+        'total_visits': 0,
+        'total_pages': 0,
+        'total_time': 0,
+        'unique_sessions': 0,
+        'natural_behaviors': 0,
+        'bans_avoided': 0
+    },
+    'config': {},
+    'start_time': None
 }
-bot_thread = None
-stop_bot_flag = False
 
-app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+stop_flag = False
 
-class EngagementBot:
-    def __init__(self, mobile=True):
-        """Initialize the bot with realistic browser behavior"""
-        self.session = requests.Session()
+def print_banner():
+    """Display ASCII art banner"""
+    banner = f"""{Colors.CYAN}
+    ╦ ╦╔═╗╔╗ ╔╗ ╔═╗╦═╗
+    ║║║║╣ ╠╩╗╠╩╗║╣ ╠╦╝
+    ╚╩╝╚═╝╚═╝╚═╝╚═╝╩╚═
+    {Colors.ENDC}{Colors.BOLD}Advanced Web Traffic Simulator{Colors.ENDC}
+    {Colors.YELLOW}v4.0 - Ethical Testing Edition{Colors.ENDC}
+    """
+    print(banner)
+
+def detect_hardware_capacity():
+    """Auto-detect device capabilities and set appropriate limits"""
+    try:
+        cpu_count = psutil.cpu_count(logical=True)
+        ram_gb = psutil.virtual_memory().total / (1024**3)
         
-        # Rotate between different realistic user agents
-        self.user_agents = [
-            'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
-            'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-            'Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
-            'Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Mobile Safari/537.36',
+        # Categorize device
+        if IS_TERMUX or IS_ANDROID:
+            device_class = "mobile"
+            if ram_gb < 2:
+                capacity = "low"
+            elif ram_gb < 4:
+                capacity = "medium"
+            else:
+                capacity = "high"
+        else:
+            device_class = "desktop"
+            if ram_gb < 4:
+                capacity = "low"
+            elif ram_gb < 8:
+                capacity = "medium"
+            elif ram_gb < 16:
+                capacity = "high"
+            else:
+                capacity = "ultra"
+        
+        # Set capacity parameters
+        capacity_map = {
+            "low": {
+                "max_concurrent": 1,
+                "visits_per_cycle": (2, 4),
+                "max_pages_per_visit": 3,
+                "delay_multiplier": 1.5
+            },
+            "medium": {
+                "max_concurrent": 2,
+                "visits_per_cycle": (3, 6),
+                "max_pages_per_visit": 5,
+                "delay_multiplier": 1.0
+            },
+            "high": {
+                "max_concurrent": 3,
+                "visits_per_cycle": (4, 8),
+                "max_pages_per_visit": 7,
+                "delay_multiplier": 0.8
+            },
+            "ultra": {
+                "max_concurrent": 4,
+                "visits_per_cycle": (5, 10),
+                "max_pages_per_visit": 10,
+                "delay_multiplier": 0.6
+            }
+        }
+        
+        config = capacity_map[capacity]
+        
+        return {
+            "device_class": device_class,
+            "capacity": capacity,
+            "cpu_count": cpu_count,
+            "ram_gb": round(ram_gb, 1),
+            "platform": PLATFORM,
+            **config
+        }
+        
+    except Exception:
+        # Fallback to safe defaults
+        return {
+            "device_class": "unknown",
+            "capacity": "low",
+            "cpu_count": 1,
+            "ram_gb": 1.0,
+            "platform": PLATFORM,
+            "max_concurrent": 1,
+            "visits_per_cycle": (2, 3),
+            "max_pages_per_visit": 3,
+            "delay_multiplier": 1.5
+        }
+
+def print_system_info():
+    """Display detected system information"""
+    hw = detect_hardware_capacity()
+    
+    print(f"\n{Colors.HEADER}═══ SYSTEM DETECTION ═══{Colors.ENDC}")
+    print(f"{Colors.CYAN}Platform:{Colors.ENDC} {hw['platform']}")
+    print(f"{Colors.CYAN}Device Class:{Colors.ENDC} {hw['device_class'].upper()}")
+    print(f"{Colors.CYAN}CPU Cores:{Colors.ENDC} {hw['cpu_count']}")
+    print(f"{Colors.CYAN}RAM:{Colors.ENDC} {hw['ram_gb']} GB")
+    print(f"{Colors.CYAN}Capacity:{Colors.ENDC} {hw['capacity'].upper()}")
+    print(f"{Colors.CYAN}Max Concurrent:{Colors.ENDC} {hw['max_concurrent']}")
+    print(f"{Colors.CYAN}Visits/Cycle:{Colors.ENDC} {hw['visits_per_cycle'][0]}-{hw['visits_per_cycle'][1]}")
+    print(f"{Colors.CYAN}Max Pages/Visit:{Colors.ENDC} {hw['max_pages_per_visit']}")
+    
+    if IS_TERMUX:
+        print(f"{Colors.YELLOW}⚡ Termux environment detected - optimized for mobile{Colors.ENDC}")
+    
+    return hw
+
+def load_keywords(wordlist_path):
+    """Load keywords from wordlist file"""
+    if not os.path.exists(wordlist_path):
+        print(f"{Colors.RED}[ERROR]{Colors.ENDC} Wordlist not found: {wordlist_path}")
+        return None
+    
+    try:
+        with open(wordlist_path, 'r', encoding='utf-8') as f:
+            keywords = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+        
+        if not keywords:
+            print(f"{Colors.RED}[ERROR]{Colors.ENDC} Wordlist is empty")
+            return None
+        
+        print(f"{Colors.GREEN}[✓]{Colors.ENDC} Loaded {len(keywords)} keywords from wordlist")
+        return keywords
+        
+    except Exception as e:
+        print(f"{Colors.RED}[ERROR]{Colors.ENDC} Failed to load wordlist: {e}")
+        return None
+
+def get_ethical_consent():
+    """Get user consent for ethical usage"""
+    print(f"\n{Colors.HEADER}═══ ETHICAL USAGE AGREEMENT ═══{Colors.ENDC}")
+    print(f"{Colors.YELLOW}This tool is designed for:{Colors.ENDC}")
+    print("  • Authorized penetration testing (HTB, CTF)")
+    print("  • Testing your own websites")
+    print("  • Security research with permission")
+    print("  • Educational purposes in controlled environments")
+    
+    print(f"\n{Colors.RED}You must NOT use this tool to:{Colors.ENDC}")
+    print("  ✗ Attack websites without authorization")
+    print("  ✗ Manipulate metrics fraudulently")
+    print("  ✗ Violate Terms of Service")
+    print("  ✗ Conduct malicious activities")
+    
+    print(f"\n{Colors.BOLD}By using Webber, you agree that:{Colors.ENDC}")
+    print("  1. You have explicit authorization to test the target")
+    print("  2. You will use this tool ethically and legally")
+    print("  3. You accept full responsibility for your actions")
+    print("  4. You will respect rate limits and robots.txt")
+    
+    consent = input(f"\n{Colors.CYAN}Do you agree to use Webber ethically? (yes/no): {Colors.ENDC}").strip().lower()
+    
+    if consent != 'yes':
+        print(f"{Colors.RED}[!] Consent not given. Exiting.{Colors.ENDC}")
+        return False
+    
+    return True
+
+def verify_target_authorization(target_url):
+    """Verify user has authorization for target"""
+    print(f"\n{Colors.HEADER}═══ TARGET AUTHORIZATION ═══{Colors.ENDC}")
+    print(f"{Colors.CYAN}Target URL:{Colors.ENDC} {target_url}")
+    print(f"\n{Colors.YELLOW}IMPORTANT:{Colors.ENDC} You must have explicit permission to test this target.")
+    print("This includes:")
+    print("  • HTB/CTF challenge boxes")
+    print("  • Your own websites")
+    print("  • Sites with written authorization")
+    print("  • Test environments you control")
+    
+    confirm = input(f"\n{Colors.CYAN}Do you have authorization to test this target? (yes/no): {Colors.ENDC}").strip().lower()
+    
+    if confirm != 'yes':
+        print(f"{Colors.RED}[!] Target authorization not confirmed. Exiting.{Colors.ENDC}")
+        return False
+    
+    return True
+
+def check_robots_txt(target_url, mode='check'):
+    """Check and respect robots.txt based on mode"""
+    try:
+        parsed = urlparse(target_url)
+        robots_url = f"{parsed.scheme}://{parsed.netloc}/robots.txt"
+        
+        if mode == 'ignore':
+            print(f"{Colors.YELLOW}[!]{Colors.ENDC} Skipping robots.txt check (ignore mode)")
+            return True
+        
+        print(f"{Colors.CYAN}[i] Checking robots.txt...{Colors.ENDC}")
+        
+        response = requests.get(robots_url, timeout=10)
+        if response.status_code == 200:
+            print(f"{Colors.GREEN}[✓]{Colors.ENDC} Found robots.txt")
+            
+            # Check for restrictive rules
+            if 'Disallow: /' in response.text:
+                print(f"{Colors.YELLOW}[!]{Colors.ENDC} robots.txt disallows crawling")
+                
+                if mode == 'respect':
+                    print(f"{Colors.RED}[!]{Colors.ENDC} Respect mode enabled - cannot proceed")
+                    return False
+                elif mode == 'check':
+                    print(f"{Colors.CYAN}Note:{Colors.ENDC} You can override this for authorized testing (HTB/CTF)")
+                    respect = input(f"{Colors.CYAN}Continue anyway? (yes/no): {Colors.ENDC}").strip().lower()
+                    return respect == 'yes'
+            else:
+                print(f"{Colors.GREEN}[✓]{Colors.ENDC} No restrictive crawling rules found")
+        else:
+            print(f"{Colors.YELLOW}[!]{Colors.ENDC} No robots.txt found (proceeding)")
+        
+        return True
+        
+    except Exception:
+        print(f"{Colors.YELLOW}[!]{Colors.ENDC} Could not check robots.txt (proceeding)")
+        return True
+
+
+class BehaviorRandomizer:
+    """Generates realistic human behavior patterns"""
+    
+    @staticmethod
+    def random_reading_speed():
+        reading_styles = [150, 200, 250, 300, 350, 400, 500, 600]
+        return random.choice(reading_styles)
+    
+    @staticmethod
+    def random_attention_span():
+        attention_profiles = [
+            ('impatient', 0.3, 0.6),
+            ('casual', 0.5, 1.0),
+            ('interested', 0.8, 1.5),
+            ('thorough', 1.2, 2.0),
+            ('researcher', 1.5, 3.0)
         ]
+        profile = random.choice(attention_profiles)
+        return profile[0], random.uniform(profile[1], profile[2])
+    
+    @staticmethod
+    def random_navigation_pattern():
+        patterns = ['linear', 'scanner', 'explorer', 'focused', 'wanderer']
+        return random.choice(patterns)
+    
+    @staticmethod
+    def should_make_mistake():
+        return random.random() < 0.15
+
+
+class RateLimiter:
+    def __init__(self, hw_config):
+        multiplier = hw_config['delay_multiplier']
+        self.max_requests = int(random.randint(5, 15) * multiplier)
+        self.time_window = random.randint(45, 90)
+        self.requests = deque()
+        self.aggressive_mode = random.random() < 0.3
+    
+    def wait_if_needed(self):
+        now = time.time()
         
+        while self.requests and self.requests[0] < now - self.time_window:
+            self.requests.popleft()
+        
+        if len(self.requests) >= self.max_requests:
+            base_wait = self.time_window - (now - self.requests[0])
+            sleep_time = base_wait * (random.uniform(0.5, 0.8) if self.aggressive_mode else random.uniform(1.0, 2.5))
+            
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+                if random.random() < 0.5:
+                    self.requests.clear()
+        
+        self.requests.append(now)
+
+
+class WebberBot:
+    def __init__(self, hw_config, keywords, target_url, use_proxies=True):
+        self.hw_config = hw_config
+        self.keywords = keywords
+        self.target_url = target_url
+        self.session = requests.Session()
+        self.rate_limiter = RateLimiter(hw_config)
+        
+        # IP and device spoofing enabled by default
+        self.use_proxies = use_proxies
+        self.proxy_pool = []
+        self.current_proxy = None
+        
+        # Randomize device type for this session
+        self.is_mobile = random.random() < 0.65
+        self.behavior_profile = BehaviorRandomizer.random_navigation_pattern()
+        self.session_id = str(uuid.uuid4())
+        
+        # Device fingerprint randomization
+        self.device_fingerprint = self._generate_device_fingerprint()
+        
+        # Load proxy pool if available
+        if self.use_proxies:
+            self._load_proxy_pool()
+        
+        self.user_agents = self._get_user_agents()
         self.update_headers()
     
-    def update_headers(self):
-        """Update headers with random user agent"""
-        headers = {
-            'User-Agent': random.choice(self.user_agents),
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'DNT': '1',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Cache-Control': 'max-age=0',
-            'Referer': 'https://www.google.com/',  # Simulate coming from Google
-        }
-        self.session.headers.update(headers)
-    
-    def search_and_click(self, query, target_url="https://nmhss.onrender.com"):
-        """
-        Search Google for query and 'click' on target_url if found
-        This simulates organic traffic from search engines
-        Replace target_url with your own website URL
-        """
-        try:
-            # Perform Google search
-            search_url = f"https://www.google.com/search?q={quote_plus(query)}"
-            
-            # Random delay before search (1-3 seconds)
-            time.sleep(random.uniform(1, 3))
-            
-            response = self.session.get(search_url, timeout=15)
-            
-            if response.status_code == 200:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                
-                # Find all search result links
-                links = soup.find_all('a', href=True)
-                found_target = False
-                
-                for link in links:
-                    href = link.get('href', '')
-                    if target_url in href:
-                        found_target = True
-                        break
-                
-                # Simulate reading search results (2-5 seconds)
-                time.sleep(random.uniform(2, 5))
-                
-                return found_target
-            
-            return False
-                
-        except Exception as e:
-            return False
-    
-    def visit_page_naturally(self, url):
-        """
-        Visit a page and simulate natural human behavior:
-        - Scroll through content
-        - Read text (stay for realistic time)
-        - Click on internal links
-        - Interact with elements
-        Works with any website - just provide the URL
-        """
-        page_data = {
-            'url': url,
-            'visit_duration': 0,
-            'pages_visited': 0,
-            'links_clicked': [],
-            'forms_interacted': 0
+    def _generate_device_fingerprint(self):
+        """Generate unique device fingerprint for this session"""
+        screen_resolutions = {
+            'mobile': [
+                (360, 640), (375, 667), (390, 844), (393, 851),
+                (412, 915), (414, 896), (428, 926)
+            ],
+            'desktop': [
+                (1366, 768), (1440, 900), (1536, 864), (1920, 1080),
+                (2560, 1440), (3840, 2160)
+            ]
         }
         
+        device_type = 'mobile' if self.is_mobile else 'desktop'
+        screen = random.choice(screen_resolutions[device_type])
+        
+        return {
+            'screen_width': screen[0],
+            'screen_height': screen[1],
+            'color_depth': random.choice([24, 32]),
+            'timezone_offset': random.choice([-480, -420, -360, -300, -240, -180, 0, 60, 120, 180, 240, 300, 360, 420, 480, 540]),
+            'language': random.choice(['en-US', 'en-GB', 'en-CA', 'en-AU']),
+            'platform': random.choice(['Win32', 'MacIntel', 'Linux x86_64', 'iPhone', 'Android']),
+            'hardware_concurrency': random.choice([2, 4, 6, 8, 12, 16]),
+            'device_memory': random.choice([2, 4, 8, 16, 32]),
+            'do_not_track': random.choice(['1', None, 'unspecified'])
+        }
+    
+    def _load_proxy_pool(self):
+        """Load proxy pool from multiple sources"""
+        sources = []
+        
+        # Source 1: Environment variable
+        proxy_env = os.environ.get('PROXY_LIST', '')
+        if proxy_env:
+            sources.extend([p.strip() for p in proxy_env.split(',') if p.strip()])
+        
+        # Source 2: proxies.txt file
+        if os.path.exists('proxies.txt'):
+            try:
+                with open('proxies.txt', 'r') as f:
+                    sources.extend([line.strip() for line in f if line.strip() and not line.startswith('#')])
+            except:
+                pass
+        
+        # Source 3: Auto-fetch free proxies if none available
+        if not sources:
+            print(f"{Colors.YELLOW}[!]{Colors.ENDC} No proxies found in proxies.txt or environment")
+            print(f"{Colors.CYAN}[*]{Colors.ENDC} Fetching free proxies automatically...")
+            sources = self._fetch_free_proxies()
+            
+            if sources:
+                # Save to proxies.txt for future use
+                try:
+                    with open('proxies.txt', 'w') as f:
+                        f.write("# Auto-fetched free proxies\n")
+                        f.write("# Add your own proxies here for better reliability\n\n")
+                        for proxy in sources:
+                            f.write(f"{proxy}\n")
+                    print(f"{Colors.GREEN}[✓]{Colors.ENDC} Saved proxies to proxies.txt")
+                except:
+                    pass
+        
+        if sources:
+            self.proxy_pool = sources
+            random.shuffle(self.proxy_pool)
+            print(f"{Colors.GREEN}[✓]{Colors.ENDC} Loaded {len(self.proxy_pool)} proxies for IP rotation")
+        else:
+            print(f"{Colors.YELLOW}[!]{Colors.ENDC} No proxies available - using direct connection")
+            print(f"{Colors.CYAN}[i]{Colors.ENDC} Device spoofing is still active (different user agents & headers)")
+    
+    def _fetch_free_proxies(self):
+        """Fetch free proxies from public sources"""
+        proxies = []
+        
+        print(f"{Colors.CYAN}[*]{Colors.ENDC} Fetching from free proxy sources...")
+        
+        # Source 1: ProxyScrape API
         try:
-            # Update referer to simulate coming from Google
-            self.session.headers['Referer'] = f'https://www.google.com/search?q={urlparse(url).netloc.replace(".", "+")}'
-            
-            # Visit main page
-            start_time = time.time()
-            response = self.session.get(url, timeout=15)
-            
+            url = "https://api.proxyscrape.com/v2/?request=get&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all"
+            response = requests.get(url, timeout=15)
             if response.status_code == 200:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                
-                # Simulate reading the page content
-                # Calculate realistic read time based on content
-                text_content = soup.get_text()
-                word_count = len(text_content.split())
-                # Average reading speed: 200-250 words per minute
-                read_time = (word_count / 225) * 60  # seconds
-                # Add some randomness (people read at different speeds)
-                read_time = random.uniform(read_time * 0.7, read_time * 1.3)
-                # Cap between 30 seconds and 5 minutes
-                read_time = max(30, min(300, read_time))
-                
-                bot_status['current_phase'] = f'Reading page content ({int(read_time)}s)'
-                
-                # Simulate scrolling by breaking read time into chunks
-                scroll_intervals = int(read_time / 5)
-                for i in range(scroll_intervals):
-                    if stop_bot_flag:
-                        break
-                    time.sleep(5)
-                    # Simulate scroll by making small requests
-                
-                page_data['pages_visited'] += 1
-                
-                # Find and click internal links (simulate exploring the site)
-                internal_links = []
-                for link in soup.find_all('a', href=True):
-                    href = link.get('href')
-                    # Only internal links
-                    if href and (href.startswith('/') or url in href) and '#' not in href:
-                        full_url = urljoin(url, href)
-                        if full_url not in internal_links and full_url != url:
-                            internal_links.append(full_url)
-                
-                # Visit 2-4 random internal pages
-                pages_to_visit = min(len(internal_links), random.randint(2, 4))
-                
-                for i in range(pages_to_visit):
-                    if stop_bot_flag:
-                        break
-                    
-                    if i < len(internal_links):
-                        next_page = internal_links[i]
-                        bot_status['current_phase'] = f'Visiting internal page {i+1}/{pages_to_visit}'
-                        
-                        # Update referer to previous page
-                        self.session.headers['Referer'] = url
-                        
-                        # Random delay before clicking link (2-8 seconds)
-                        time.sleep(random.uniform(2, 8))
-                        
-                        try:
-                            page_response = self.session.get(next_page, timeout=15)
-                            if page_response.status_code == 200:
-                                page_data['links_clicked'].append(next_page)
-                                page_data['pages_visited'] += 1
-                                
-                                # Read this page too (shorter time)
-                                page_soup = BeautifulSoup(page_response.text, 'html.parser')
-                                page_text = page_soup.get_text()
-                                page_words = len(page_text.split())
-                                page_read_time = max(15, min(90, (page_words / 225) * 60))
-                                
-                                time.sleep(random.uniform(page_read_time * 0.5, page_read_time))
-                                
-                        except:
-                            pass
-                
-                # Check for forms and simulate interaction
-                forms = soup.find_all('form')
-                if forms and random.random() > 0.5:  # 50% chance to interact with forms
-                    bot_status['current_phase'] = 'Interacting with form'
-                    time.sleep(random.uniform(3, 8))  # Time to fill form
-                    page_data['forms_interacted'] += 1
-                
-                # Calculate total time spent
-                page_data['visit_duration'] = time.time() - start_time
-                
-        except Exception as e:
-            page_data['error'] = str(e)
-        
-        return page_data
-    
-    def simulate_multiple_visits(self, url, num_visits=5):
-        """
-        Simulate multiple user visits with different patterns
-        Customize the keywords list below with your own website keywords
-        """
-        all_visits = []
-        
-        # CUSTOMIZE: Replace these with your own website keywords
-        keywords = [
-            "nmhss thirunavaya",
-            "navamukunda higher secondary school",
-            "nmhss school code",
-            "navamukunda hss thirunavaya",
-            "nmhss admin portal",
-        ]
-        
-        for visit_num in range(num_visits):
-            if stop_bot_flag:
-                break
-            
-            bot_status['current_phase'] = f'Simulating visit {visit_num + 1}/{num_visits}'
-            
-            # Randomly choose whether to come from search or direct
-            from_search = random.random() > 0.3  # 70% from search, 30% direct
-            
-            if from_search:
-                # Search for random keyword
-                keyword = random.choice(keywords)
-                bot_status['current_phase'] = f'Searching: {keyword}'
-                self.search_and_click(keyword, url)
-            
-            # Update user agent for variety
-            self.update_headers()
-            
-            # Visit the site naturally
-            visit_data = self.visit_page_naturally(url)
-            all_visits.append(visit_data)
-            
-            bot_status['total_pages_visited'] += visit_data['pages_visited']
-            bot_status['total_time_spent'] += visit_data['visit_duration']
-            
-            # Random delay between visits (simulate different users)
-            delay = random.uniform(30, 120)  # 30 seconds to 2 minutes
-            bot_status['current_phase'] = f'Waiting between visits ({int(delay)}s)'
-            
-            for _ in range(int(delay)):
-                if stop_bot_flag:
-                    break
-                time.sleep(1)
-        
-        return all_visits
-
-
-def run_bot_loop():
-    """
-    Run the bot in a continuous loop with realistic engagement
-    CUSTOMIZE: Change target_url to your own website
-    """
-    global bot_status, stop_bot_flag
-    
-    bot = EngagementBot(mobile=True)
-    
-    # CUSTOMIZE: Replace with your website URL
-    target_url = "https://nmhss.onrender.com"
-    
-    while not stop_bot_flag:
-        try:
-            bot_status['run_count'] += 1
-            bot_status['last_run_time'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            
-            # Simulate 3-5 realistic user visits per run
-            num_visits = random.randint(3, 5)
-            bot_status['current_phase'] = f'Starting {num_visits} user simulations'
-            
-            visits = bot.simulate_multiple_visits(target_url, num_visits)
-            
-            if stop_bot_flag:
-                break
-            
-            # Calculate engagement score
-            avg_time = bot_status['total_time_spent'] / max(bot_status['run_count'], 1)
-            avg_pages = bot_status['total_pages_visited'] / max(bot_status['run_count'], 1)
-            engagement_score = min(100, int((avg_time / 60) * 10 + avg_pages * 5))
-            bot_status['engagement_score'] = engagement_score
-            
-            # Update results
-            result_entry = {
-                'run_number': bot_status['run_count'],
-                'timestamp': bot_status['last_run_time'],
-                'visits_simulated': num_visits,
-                'total_pages_visited': bot_status['total_pages_visited'],
-                'total_time_spent_minutes': round(bot_status['total_time_spent'] / 60, 2),
-                'engagement_score': engagement_score,
-                'visit_details': visits[-3:]  # Keep last 3 visits
-            }
-            
-            bot_status['results'].append(result_entry)
-            bot_status['latest_summary'] = result_entry
-            
-            # Keep only last 10 results to save memory
-            if len(bot_status['results']) > 10:
-                bot_status['results'] = bot_status['results'][-10:]
-            
-            bot_status['current_phase'] = 'Waiting for next cycle'
-            
-            # Wait 10-15 minutes between cycles (realistic user pattern)
-            wait_time = random.randint(600, 900)  # 10-15 minutes
-            for _ in range(wait_time):
-                if stop_bot_flag:
-                    break
-                time.sleep(1)
-            
-        except Exception as e:
-            bot_status['current_phase'] = f'Error: {str(e)}'
-            time.sleep(30)
-    
-    bot_status['running'] = False
-    bot_status['current_phase'] = 'Stopped'
-
-
-# API Endpoints
-
-@app.route('/api/status', methods=['GET'])
-def get_status():
-    """Get current bot status"""
-    return jsonify(bot_status)
-
-@app.route('/api/start', methods=['POST'])
-def start_bot():
-    """Start the engagement bot"""
-    global bot_thread, stop_bot_flag, bot_status
-    
-    if bot_status['running']:
-        return jsonify({'success': False, 'message': 'Bot is already running'})
-    
-    stop_bot_flag = False
-    bot_status['running'] = True
-    bot_status['current_phase'] = 'Starting...'
-    
-    bot_thread = threading.Thread(target=run_bot_loop, daemon=True)
-    bot_thread.start()
-    
-    return jsonify({'success': True, 'message': 'Engagement bot started - simulating realistic user behavior'})
-
-@app.route('/api/stop', methods=['POST'])
-def stop_bot():
-    """Stop the bot"""
-    global stop_bot_flag, bot_status
-    
-    if not bot_status['running']:
-        return jsonify({'success': False, 'message': 'Bot is not running'})
-    
-    stop_bot_flag = True
-    bot_status['current_phase'] = 'Stopping...'
-    
-    return jsonify({'success': True, 'message': 'Bot stop signal sent'})
-
-@app.route('/api/results', methods=['GET'])
-def get_results():
-    """Get all results"""
-    return jsonify({'results': bot_status['results']})
-
-@app.route('/api/summary', methods=['GET'])
-def get_summary():
-    """Get latest summary"""
-    return jsonify(bot_status['latest_summary'])
-
-@app.route('/api/stats', methods=['GET'])
-def get_stats():
-    """Get overall statistics"""
-    stats = {
-        'total_runs': bot_status['run_count'],
-        'total_pages_visited': bot_status['total_pages_visited'],
-        'total_time_spent_hours': round(bot_status['total_time_spent'] / 3600, 2),
-        'engagement_score': bot_status['engagement_score'],
-        'average_time_per_visit': round(bot_status['total_time_spent'] / max(bot_status['total_pages_visited'], 1), 2),
-        'is_running': bot_status['running']
-    }
-    return jsonify(stats)
-
-@app.route('/', methods=['GET'])
-def home():
-    """API documentation - Works with any website"""
-    docs = {
-        'name': 'Website Engagement Bot API',
-        'version': '2.0',
-        'description': 'Simulates realistic user engagement to improve site metrics for any website',
-        'setup': {
-            'step_1': 'Edit run_bot_loop() function - change target_url to your website',
-            'step_2': 'Edit simulate_multiple_visits() - add your keywords',
-            'step_3': 'Deploy and start the bot via /api/start'
-        },
-        'endpoints': {
-            '/api/status': 'GET - Get current bot status',
-            '/api/start': 'POST - Start the engagement bot',
-            '/api/stop': 'POST - Stop the bot',
-            '/api/results': 'GET - Get all results (last 10 runs)',
-            '/api/summary': 'GET - Get latest run summary',
-            '/api/stats': 'GET - Get overall engagement statistics'
-        },
-        'features': {
-            'realistic_behavior': 'Simulates human reading patterns and navigation',
-            'search_traffic': 'Comes from Google searches (70% of visits)',
-            'internal_navigation': 'Clicks 2-4 internal links per visit',
-            'time_on_site': '30s - 5min per page based on content length',
-            'multiple_visits': '3-5 users per cycle',
-            'varied_user_agents': 'Different devices and browsers'
-        },
-        'metrics_improved': [
-            'Time on site',
-            'Pages per session',
-            'Bounce rate',
-            'Internal link clicks',
-            'Organic search traffic signals'
-        ]
-    }
-    return jsonify(docs)
-
-
-if __name__ == "__main__":
-    if not DEPENDENCIES_OK:
-        print("❌ Missing dependencies!")
-        print("Install: pip install requests beautifulsoup4 flask flask-cors")
-        sys.exit(1)
-    
-    print("="*60)
-    print("🚀 Website Engagement Bot API Server")
-    print("="*60)
-    print("\n📊 Improves User Engagement Metrics for Any Website:")
-    print("  ✓ Time on site")
-    print("  ✓ Pages per session")
-    print("  ✓ Bounce rate reduction")
-    print("  ✓ Internal navigation")
-    print("  ✓ Organic traffic signals")
-    print("\n⚙️  SETUP: Edit the code to customize:")
-    print("  1. Change target_url in run_bot_loop()")
-    print("  2. Update keywords in simulate_multiple_visits()")
-    print("\n🌐 API Endpoints:")
-    print("  GET  /api/status   - Get bot status")
-    print("  POST /api/start    - Start engagement bot")
-    print("  POST /api/stop     - Stop the bot")
-    print("  GET  /api/stats    - Get engagement statistics")
-    print("\n🚀 Starting server...")
-    
-    # Get port from environment variable (for Render.com or any hosting)
-    port = int(os.environ.get('PORT', 5000))
-    
-    print(f"   Server running on port: {port}")
-    print("\n💡 Press Ctrl+C to stop the server")
-    print("="*60 + "\n")
-    
-    # Run Flask app
-    app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
+                proxy_list = response.text.strip().split('\n')
+                for proxy in proxy_list[:10]:  # Take first 10
+             

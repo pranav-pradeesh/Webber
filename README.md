@@ -33,10 +33,7 @@ That's it! Webber will:
 
 **Step 1:** Download Webber
 ```bash
-# Option 1: Direct download
-wget https://your-link/webber.py
-
-# Option 2: Git clone
+Git clone
 git clone https://your-repo/webber.git
 cd webber
 ```

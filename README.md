@@ -1,700 +1,603 @@
-# Webber
+# 🕷️ WEBBER - Advanced Web Traffic Simulator
 
-# 🚀 Website Engagement Bot API
-
-<div align="center">
-
-![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
-![Flask](https://img.shields.io/badge/Flask-3.0.0-green.svg)
-![License](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Status](https://img.shields.io/badge/Status-Active-success.svg)
-
-**Boost your website's engagement metrics with realistic user behavior simulation**
-
-[Features](#-features) • [Quick Start](#-quick-start) • [Deployment](#-deployment) • [API Docs](#-api-documentation) • [FAQ](#-faq)
-
-</div>
-
----
-
-## 🎯 What Does This Do?
-
-This bot simulates **real human behavior** on your website to improve engagement metrics that search engines care about:
-
-| Metric | How It Helps | Impact |
-|--------|--------------|--------|
-| ⏱️ **Time on Site** | Stays 30s-5min per page | 🟢 High |
-| 📄 **Pages/Session** | Visits 3-5 pages | 🟢 High |
-| 📉 **Bounce Rate** | Reduces by exploring site | 🟢 High |
-| 🔗 **Internal Links** | Clicks through pages | 🟡 Medium |
-| 🔍 **Organic Traffic** | Comes from Google searches | 🟢 High |
-
----
-
-## ✨ Features
-
-### 🎭 Realistic Human Behavior
-
-```mermaid
-graph LR
-    A[Google Search] --> B[Click Result]
-    B --> C[Read Page 1-3min]
-    C --> D[Click Internal Link]
-    D --> E[Read Another Page]
-    E --> F[Interact with Forms]
-    F --> G[Visit More Pages]
+```
+    ╦ ╦╔═╗╔╗ ╔╗ ╔═╗╦═╗
+    ║║║║╣ ╠╩╗╠╩╗║╣ ╠╦╝
+    ╚╩╝╚═╝╚═╝╚═╝╚═╝╩╚═
+    Advanced Web Traffic Simulator
+    v4.0 - Ethical Testing Edition
 ```
 
-- 🔍 **Searches Google first** (70% of visits)
-- 📖 **Reads content** based on word count (200-250 WPM)
-- 🖱️ **Clicks 2-4 internal links** per visit
-- 📝 **Interacts with forms** (50% probability)
-- 👥 **Multiple user agents** (iPhone, Android, etc.)
-- ⏰ **Random timing** to avoid detection
-- 🔄 **Varied behavior patterns** per "user"
-
-### 📊 Metrics Tracked
-
-- Total pages visited
-- Total time spent on site
-- Engagement score (0-100)
-- Average time per visit
-- Number of runs completed
+**Realistic web traffic simulation for HTB/CTF challenges and authorized penetration testing.**
 
 ---
 
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.8 or higher
-- pip (Python package manager)
-
-### Installation
-
-#### Option 1: Local Setup
+## ⚡ Quick Start (One Command!)
 
 ```bash
-# Clone or download the repository
-git clone https://github.com/yourusername/engagement-bot.git
-cd engagement-bot
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the server
-python app.py
+# Download and run - everything installs automatically!
+python3 webber.py -t https://target.htb -w keywords.txt
 ```
 
-#### Option 2: Termux (Android)
+That's it! Webber will:
+- ✅ Auto-install all dependencies
+- ✅ Auto-fetch free proxies
+- ✅ Auto-configure everything
+- ✅ Start simulating traffic
 
+---
+
+## 📦 Installation
+
+### All Platforms (Linux, macOS, Windows, Termux)
+
+**Step 1:** Download Webber
 ```bash
-# Update packages
-pkg update && pkg upgrade
+# Option 1: Direct download
+wget https://your-link/webber.py
 
-# Install Python
+# Option 2: Git clone
+git clone https://your-repo/webber.git
+cd webber
+```
+
+**Step 2:** Create a keyword wordlist
+```bash
+# Create keywords.txt
+cat > keywords.txt << EOF
+target system name
+admin portal
+login page
+user dashboard
+EOF
+```
+
+**Step 3:** Run (auto-installs everything!)
+```bash
+python3 webber.py -t https://target.htb -w keywords.txt
+```
+
+**First run will:**
+1. Detect missing dependencies
+2. Ask permission to install them
+3. Auto-fetch 20+ free proxies
+4. Configure everything automatically
+5. Start traffic simulation
+
+---
+
+## 🎯 Features
+
+### 🤖 Automatic by Default
+- **Device Spoofing**: 30+ different devices (iPhone, Android, Windows, Mac)
+- **IP Rotation**: Auto-fetches and rotates through free proxies
+- **Fingerprinting**: Unique browser fingerprints per session
+- **Human Behavior**: Reading patterns, mistakes, distractions
+- **Smart Delays**: Realistic timing based on content
+
+### 🛡️ Stealth Features
+- ✅ Different user agents per request
+- ✅ Randomized device fingerprints
+- ✅ Spoofed IP headers (X-Forwarded-For)
+- ✅ Automatic proxy rotation (20+ free proxies)
+- ✅ Session identity changes every 2-3 visits
+- ✅ Natural browsing patterns
+- ✅ Human mistakes (typos, back button)
+- ✅ Hardware-optimized performance
+
+### 🔧 Hardware Auto-Detection
+Automatically detects your device and optimizes:
+- **Mobile/Termux**: Low-power mode
+- **Desktop (4GB RAM)**: Medium capacity
+- **Desktop (8GB+ RAM)**: High performance
+- **Workstation (16GB+ RAM)**: Maximum capacity
+
+### 📊 Live Statistics Dashboard
+```
+═══ LIVE STATISTICS ═══
+Runtime: 156s
+Cycles: 3
+Total Visits: 18
+Pages Viewed: 87
+Time Spent: 45m
+Unique Sessions: 18
+Identity Rotations: 6
+IP Rotations: 6
+Proxy Pool: 23 active
+
+✓ Requests appear from different devices & IPs
+```
+
+---
+
+## 🚀 Usage
+
+### Basic Usage
+```bash
+# Simple mode (auto-install, auto-proxies)
+python3 webber.py -t https://target.htb -w keywords.txt
+```
+
+### HTB/CTF Quick Mode
+```bash
+# Skip all prompts, ignore robots.txt
+python3 webber.py -t https://target.htb -w keywords.txt --no-consent --robots-mode ignore
+```
+
+### Production Testing Mode
+```bash
+# Respects robots.txt, asks permissions
+python3 webber.py -t https://client-site.com -w keywords.txt --robots-mode respect
+```
+
+### Advanced Options
+```bash
+# Full control
+python3 webber.py \
+  --target https://target.htb \
+  --wordlist keywords.txt \
+  --robots-mode ignore \
+  --no-consent
+```
+
+---
+
+## 📝 Command Line Options
+
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--target` | `-t` | Target URL to test | Required |
+| `--wordlist` | `-w` | Path to keyword file | Required |
+| `--robots-mode` | - | `check`, `respect`, or `ignore` | `check` |
+| `--no-consent` | - | Skip ethical consent prompts | Off |
+
+### Robots.txt Modes
+
+- **check** (default): Asks if you want to proceed when restrictions found
+- **respect**: Enforces robots.txt compliance, stops if disallowed
+- **ignore**: Skips robots.txt check entirely (HTB/CTF mode)
+
+---
+
+## 📄 Creating a Wordlist
+
+Create `keywords.txt` with your target-specific keywords:
+
+```text
+# HTB Target Keywords
+target machine name
+admin panel
+login portal
+user dashboard
+system console
+
+# Lines starting with # are comments (ignored)
+```
+
+**Tips:**
+- Use 5-20 keywords
+- Include variations (with/without spaces)
+- Add common terms for the target
+- Mix general and specific queries
+
+---
+
+## 🌐 Proxy System
+
+### Automatic Proxy Setup (Default)
+
+Webber **automatically fetches 20+ free proxies** on first run:
+
+```
+[*] Fetching free proxies...
+[✓] Fetched 23 working proxies
+[✓] Saved to proxies.txt
+[✓] Proxy rotation enabled
+```
+
+Proxies are automatically:
+- ✅ Fetched from multiple sources
+- ✅ Tested for connectivity
+- ✅ Saved to `proxies.txt`
+- ✅ Rotated randomly during traffic simulation
+- ✅ Re-fetched if none are working
+
+### Manual Proxy Setup (Optional)
+
+If you have your own proxies, create `proxies.txt`:
+
+```text
+# Your custom proxies
+http://proxy1.example.com:8080
+http://username:password@proxy2.example.com:8080
+socks5://proxy3.example.com:1080
+
+# Free proxies
+http://123.45.67.89:8080
+http://98.76.54.32:3128
+```
+
+**Format:** `protocol://[username:password@]host:port`
+
+Or use environment variable:
+```bash
+export PROXY_LIST="http://proxy1.com:8080,http://proxy2.com:8080"
+```
+
+---
+
+## 🔧 What Gets Randomized
+
+### Device Fingerprints (Automatic)
+- **User Agent**: 30+ real devices
+- **Screen Resolution**: Mobile (360x640 to 428x926), Desktop (1366x768 to 3840x2160)
+- **Color Depth**: 24-bit or 32-bit
+- **Timezone**: Global offsets (-480 to +540)
+- **Language**: en-US, en-GB, en-CA, en-AU
+- **Platform**: Win32, MacIntel, Linux x86_64, iPhone, Android
+- **CPU Cores**: 2, 4, 6, 8, 12, 16
+- **Device Memory**: 2GB, 4GB, 8GB, 16GB, 32GB
+
+### Network Spoofing
+- **X-Forwarded-For**: Fake IPs from US, EU, Asia ranges
+- **Via Header**: Simulated proxy chains
+- **Real IP**: Rotates through proxy pool
+
+### Human Behavior
+- **Reading Speed**: 150-600 words per minute
+- **Attention Span**: Impatient → Researcher (0.3x to 3.0x)
+- **Navigation Pattern**: Linear, scanner, explorer, focused, wanderer
+- **Mistakes**: 15% chance of typos, back button, refresh
+- **Distractions**: 8% chance of 5-30s pause
+
+---
+
+## 🖥️ Platform Support
+
+### ✅ Linux
+```bash
+# Auto-installs dependencies
+python3 webber.py -t https://target.htb -w keywords.txt
+```
+
+### ✅ macOS
+```bash
+# Works out of the box
+python3 webber.py -t https://target.htb -w keywords.txt
+```
+
+### ✅ Windows
+```bash
+# Use Python 3
+python webber.py -t https://target.htb -w keywords.txt
+```
+
+### ✅ Termux (Android)
+```bash
+# Install Python first
 pkg install python
 
-# Install dependencies
-pip install requests beautifulsoup4 flask flask-cors
-
-# Run the server
-python app.py
+# Run Webber
+python webber.py -t https://target.htb -w keywords.txt
 ```
-
-The server will start at `http://localhost:5000`
 
 ---
 
-## ⚙️ Configuration
-
-### Step 1: Edit Target Website
-
-Open `app.py` and find this section (around line 200):
-
-```python
-def run_bot_loop():
-    """
-    Run the bot in a continuous loop with realistic engagement
-    CUSTOMIZE: Change target_url to your own website
-    """
-    global bot_status, stop_bot_flag
-    
-    bot = EngagementBot(mobile=True)
-    
-    # CUSTOMIZE: Replace with your website URL
-    target_url = "https://your-website.com"  # ← CHANGE THIS
-```
-
-**Replace** `https://your-website.com` with your actual website URL.
-
-### Step 2: Edit Keywords
-
-Find this section (around line 180):
-
-```python
-def simulate_multiple_visits(self, url, num_visits=5):
-    """
-    Simulate multiple user visits with different patterns
-    CUSTOMIZE: Replace these with your own website keywords
-    """
-    all_visits = []
-    
-    # CUSTOMIZE: Replace these with your own website keywords
-    keywords = [
-        "your business name",           # ← CHANGE THESE
-        "your product keyword",         # ← ADD YOUR KEYWORDS
-        "your service keyword",         # ← WHAT PEOPLE SEARCH
-        "your location + business",     # ← FOR YOUR SITE
-        "your niche keyword",           # ← BE SPECIFIC
-    ]
-```
-
-**Replace** the example keywords with terms people would search to find your website.
-
-### Step 3: Save and Run
+## 📊 Example Session
 
 ```bash
-python app.py
+$ python3 webber.py -t https://target.htb -w keywords.txt
+
+    ╦ ╦╔═╗╔╗ ╔╗ ╔═╗╦═╗
+    ║║║║╣ ╠╩╗╠╩╗║╣ ╠╦╝
+    ╚╩╝╚═╝╚═╝╚═╝╚═╝╩╚═
+    Advanced Web Traffic Simulator
+    v4.0 - Ethical Testing Edition
+
+[*] Checking dependencies...
+[✓] All dependencies installed
+
+═══ SYSTEM DETECTION ═══
+Platform: Linux
+Device Class: DESKTOP
+CPU Cores: 8
+RAM: 16.0 GB
+Capacity: HIGH
+Max Concurrent: 3
+Visits/Cycle: 4-8
+Max Pages/Visit: 7
+
+[✓] Loaded 15 keywords from wordlist
+
+[*] Fetching free proxies...
+[✓] Fetched 23 working proxies
+[✓] Saved to proxies.txt
+
+═══ ETHICAL USAGE AGREEMENT ═══
+This tool is designed for:
+  • Authorized penetration testing (HTB, CTF)
+  • Testing your own websites
+  • Security research with permission
+
+Do you agree to use Webber ethically? (yes/no): yes
+
+═══ TARGET AUTHORIZATION ═══
+Target URL: https://target.htb
+Do you have authorization to test this target? (yes/no): yes
+
+[i] Checking robots.txt...
+[!] No robots.txt found (proceeding)
+
+═══ READY TO START ═══
+Target: https://target.htb
+Keywords: 15 loaded
+Device Capacity: HIGH
+Proxy Pool: 23 proxies
+
+Press ENTER to start Webber...
+
+═══ LIVE STATISTICS ═══
+Runtime: 156s
+Cycles: 3
+Total Visits: 18
+Pages Viewed: 87
+Time Spent: 45m
+Unique Sessions: 18
+Natural Behaviors: 23
+Bans Avoided: 87
+Identity Rotations: 6
+IP Rotations: 6
+Proxy Pool: 23 active
+Avg Pages/Visit: 4.8
+
+✓ Requests appear from different devices & IPs
+Press Ctrl+C to stop
 ```
 
 ---
 
-## 🌐 Deployment
+## 🎓 Use Cases
 
-### Deploy to Render.com (Recommended)
+### ✅ Authorized Use
+- **HTB/CTF Challenges**: Test traffic handling
+- **Own Websites**: Load testing, analytics testing
+- **Penetration Testing**: With explicit written permission
+- **Security Research**: Educational purposes
 
-<details>
-<summary><b>📖 Click to expand full deployment guide</b></summary>
-
-#### Step 1: Prepare Files
-
-Make sure you have these 3 files:
-
-1. **app.py** - Main bot code
-2. **requirements.txt** - Dependencies
-3. **render.yaml** - Render configuration
-
-#### Step 2: Create GitHub Repository
-
-```bash
-# Initialize git
-git init
-
-# Add files
-git add app.py requirements.txt render.yaml
-
-# Commit
-git commit -m "Initial commit"
-
-# Push to GitHub
-git remote add origin https://github.com/yourusername/your-repo.git
-git push -u origin main
-```
-
-Or use GitHub web interface:
-1. Create new repository
-2. Upload files via web interface
-
-#### Step 3: Deploy on Render
-
-1. Go to [render.com](https://render.com)
-2. Sign up/Login with GitHub
-3. Click **"New +"** → **"Web Service"**
-4. Connect your repository
-5. Render auto-detects settings from `render.yaml`
-6. Click **"Create Web Service"**
-7. Wait 5-10 minutes for deployment
-
-#### Step 4: Get Your URL
-
-After deployment completes:
-```
-https://your-app-name.onrender.com
-```
-
-**Test it:**
-```
-https://your-app-name.onrender.com/api/status
-```
-
-</details>
-
-### Deploy to Other Platforms
-
-<details>
-<summary><b>Heroku / Railway / Fly.io</b></summary>
-
-Similar process:
-1. Connect GitHub repository
-2. Set build command: `pip install -r requirements.txt`
-3. Set start command: `gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 0 app:app`
-4. Deploy
-
-</details>
+### ❌ Prohibited Use
+- Attacking websites without authorization
+- Fraudulent metric manipulation
+- Terms of Service violations
+- Malicious activities
 
 ---
 
-## 📡 API Documentation
+## ⚙️ How It Works
 
-### Base URL
+### Traffic Simulation Flow
 
 ```
-http://localhost:5000        # Local
-https://your-app.onrender.com  # Production
+1. Initialize Session
+   ↓
+2. Generate Device Fingerprint
+   ↓
+3. Select Random Proxy (from auto-fetched pool)
+   ↓
+4. Search Google with Random Keyword (70% of time)
+   ↓
+5. Visit Target Site
+   ↓
+6. Read Content (realistic timing)
+   ↓
+7. Navigate Internal Pages (2-7 pages)
+   ↓
+8. Simulate Human Behavior (mistakes, distractions)
+   ↓
+9. Rotate Identity (every 2-3 visits)
+   ↓
+10. Repeat with Different Device/IP
 ```
 
-### Endpoints
+### Identity Rotation
 
-#### 🏠 GET `/`
-Get API documentation and features list.
+Every 2-3 visits, Webber automatically:
+- Switches to random proxy (different IP)
+- Generates new device fingerprint
+- Changes user agent
+- Clears cookies (new session)
+- Updates all headers
 
-**Response:**
-```json
-{
-  "name": "Website Engagement Bot API",
-  "version": "2.0",
-  "endpoints": {...},
-  "features": {...}
-}
-```
-
----
-
-#### ▶️ POST `/api/start`
-Start the engagement bot.
-
-**Request:**
-```bash
-curl -X POST https://your-app.onrender.com/api/start
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Engagement bot started - simulating realistic user behavior"
-}
-```
-
----
-
-#### ⏹️ POST `/api/stop`
-Stop the bot.
-
-**Request:**
-```bash
-curl -X POST https://your-app.onrender.com/api/stop
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Bot stop signal sent"
-}
-```
-
----
-
-#### 📊 GET `/api/status`
-Get current bot status (updates every 2 seconds).
-
-**Request:**
-```bash
-curl https://your-app.onrender.com/api/status
-```
-
-**Response:**
-```json
-{
-  "running": true,
-  "run_count": 5,
-  "last_run_time": "2024-12-14 10:30:45",
-  "current_phase": "Reading page content (45s)",
-  "total_pages_visited": 67,
-  "total_time_spent": 3420,
-  "engagement_score": 87,
-  "results": [...],
-  "latest_summary": {...}
-}
-```
-
----
-
-#### 📈 GET `/api/stats`
-Get overall engagement statistics.
-
-**Request:**
-```bash
-curl https://your-app.onrender.com/api/stats
-```
-
-**Response:**
-```json
-{
-  "total_runs": 10,
-  "total_pages_visited": 150,
-  "total_time_spent_hours": 2.5,
-  "engagement_score": 92,
-  "average_time_per_visit": 60,
-  "is_running": true
-}
-```
-
----
-
-#### 📋 GET `/api/results`
-Get detailed results from last 10 runs.
-
-**Response:**
-```json
-{
-  "results": [
-    {
-      "run_number": 5,
-      "timestamp": "2024-12-14 10:30:45",
-      "visits_simulated": 4,
-      "total_pages_visited": 67,
-      "engagement_score": 87
-    }
-  ]
-}
-```
-
----
-
-#### 📝 GET `/api/summary`
-Get latest run summary.
-
-**Response:**
-```json
-{
-  "run_number": 5,
-  "timestamp": "2024-12-14 10:30:45",
-  "visits_simulated": 4,
-  "total_pages_visited": 67,
-  "total_time_spent_minutes": 45.5,
-  "engagement_score": 87
-}
-```
-
----
-
-## 📱 Build Mobile App (MIT App Inventor)
-
-### Quick Setup Guide
-
-1. **Open MIT App Inventor**: [appinventor.mit.edu](https://appinventor.mit.edu)
-
-2. **Add Components**:
-   - 3 Buttons: `btnStart`, `btnStop`, `btnRefresh`
-   - 5 Labels: `lblStatus`, `lblRunCount`, `lblPhase`, `lblScore`, `lblTime`
-   - 1 Web component: `WebAPI`
-   - 1 Clock: `ClockTimer` (TimerInterval: 2000ms)
-
-3. **Add Blocks**:
-
-```blocks
-// Initialize
-when Screen1.Initialize
-  set global API_URL to "https://your-app.onrender.com"
-
-// Start Button
-when btnStart.Click
-  set WebAPI.Url to join (global API_URL) "/api/start"
-  call WebAPI.PostText text ""
-
-// Stop Button  
-when btnStop.Click
-  set WebAPI.Url to join (global API_URL) "/api/stop"
-  call WebAPI.PostText text ""
-
-// Auto-refresh every 2 seconds
-when ClockTimer.Timer
-  set WebAPI.Url to join (global API_URL) "/api/status"
-  call WebAPI.Get
-
-// Handle response
-when WebAPI.GotText
-  // Parse JSON and update labels
-  set lblStatus.Text to join "Status: " (get running from response)
-  set lblRunCount.Text to join "Runs: " (get run_count from response)
-  set lblPhase.Text to join "Phase: " (get current_phase from response)
-  set lblScore.Text to join "Score: " (get engagement_score from response) "/100"
-```
-
-4. **Build APK**: Build → App (provide QR code)
-
-5. **Install**: Scan QR code and install on phone
-
----
-
-## 🎨 Web Dashboard (HTML Example)
-
-Create a simple web dashboard:
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Engagement Bot Dashboard</title>
-    <style>
-        body { font-family: Arial; max-width: 800px; margin: 50px auto; padding: 20px; }
-        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0; }
-        .stat-card { background: #f0f0f0; padding: 20px; border-radius: 8px; }
-        button { padding: 15px 30px; margin: 10px; font-size: 16px; cursor: pointer; }
-        .start { background: #4CAF50; color: white; border: none; border-radius: 5px; }
-        .stop { background: #f44336; color: white; border: none; border-radius: 5px; }
-        .refresh { background: #2196F3; color: white; border: none; border-radius: 5px; }
-    </style>
-</head>
-<body>
-    <h1>🚀 Engagement Bot Dashboard</h1>
-    
-    <div>
-        <button class="start" onclick="startBot()">▶️ Start Bot</button>
-        <button class="stop" onclick="stopBot()">⏹️ Stop Bot</button>
-        <button class="refresh" onclick="getStats()">🔄 Refresh</button>
-    </div>
-    
-    <div class="stats">
-        <div class="stat-card">
-            <h3>Status</h3>
-            <p id="status">Not Running</p>
-        </div>
-        <div class="stat-card">
-            <h3>Engagement Score</h3>
-            <p id="score">0/100</p>
-        </div>
-        <div class="stat-card">
-            <h3>Total Runs</h3>
-            <p id="runs">0</p>
-        </div>
-        <div class="stat-card">
-            <h3>Pages Visited</h3>
-            <p id="pages">0</p>
-        </div>
-    </div>
-    
-    <div class="stat-card">
-        <h3>Current Phase</h3>
-        <p id="phase">Idle</p>
-    </div>
-
-    <script>
-        const API_URL = 'https://your-app.onrender.com';
-        
-        async function startBot() {
-            const res = await fetch(`${API_URL}/api/start`, { method: 'POST' });
-            const data = await res.json();
-            alert(data.message);
-            getStats();
-        }
-        
-        async function stopBot() {
-            const res = await fetch(`${API_URL}/api/stop`, { method: 'POST' });
-            const data = await res.json();
-            alert(data.message);
-            getStats();
-        }
-        
-        async function getStats() {
-            const res = await fetch(`${API_URL}/api/status`);
-            const data = await res.json();
-            
-            document.getElementById('status').textContent = data.running ? '🟢 Running' : '🔴 Stopped';
-            document.getElementById('score').textContent = `${data.engagement_score}/100`;
-            document.getElementById('runs').textContent = data.run_count;
-            document.getElementById('pages').textContent = data.total_pages_visited;
-            document.getElementById('phase').textContent = data.current_phase;
-        }
-        
-        // Auto-refresh every 3 seconds
-        setInterval(getStats, 3000);
-        getStats();
-    </script>
-</body>
-</html>
-```
-
-Save as `dashboard.html` and open in browser!
-
----
-
-## ❓ FAQ
-
-### Q: Is this safe to use?
-
-**A:** The bot simulates realistic human behavior and follows proper delays. However:
-- ⚠️ Use responsibly
-- ⚠️ Don't overuse (Google may detect patterns)
-- ✅ Best combined with real marketing efforts
-- ✅ Good for keeping your site active on free hosting
-
-### Q: Will this guarantee higher rankings?
-
-**A:** No guarantees, but it helps with:
-- ✅ Improved engagement metrics
-- ✅ Better time-on-site signals
-- ✅ Lower bounce rate
-- ✅ More internal navigation
-- ❌ Not a replacement for quality content and real SEO
-
-### Q: How much does it cost?
-
-**A:** 
-- 🆓 **Free** on Render.com (with 15-min sleep)
-- 💰 **$7/month** for 24/7 uptime (Render Starter)
-- 🆓 **Always free** if self-hosted
-
-### Q: Does it work with any website?
-
-**A:** Yes! Just change:
-1. `target_url` - Your website
-2. `keywords` - Your search terms
-
-### Q: Can Google detect this?
-
-**A:** Google is smart, but this bot:
-- ✅ Uses realistic timing
-- ✅ Varies user agents
-- ✅ Comes from search results
-- ✅ Navigates naturally
-- ⚠️ Still not 100% undetectable
-
-Use in moderation alongside real traffic.
-
-### Q: How long until I see results?
-
-**A:** 
-- **Week 1-2**: Engagement metrics improve
-- **Week 3-4**: Google may notice signals
-- **Month 2-3**: Potential ranking changes
-- **Best results**: Combined with real SEO
-
-### Q: Free tier keeps sleeping on Render?
-
-**A:** Solutions:
-1. Upgrade to paid ($7/mo)
-2. Use cron job to ping every 10 minutes
-3. Use [cron-job.org](https://cron-job.org) free service
-
-### Q: Can I run multiple bots for different sites?
-
-**A:** Yes! 
-- Deploy separate instances
-- Or modify code to support multiple URLs
-- Each needs its own API endpoint
+This makes each visitor appear completely unique.
 
 ---
 
 ## 🛠️ Troubleshooting
 
-### Bot not starting
+### "Missing dependencies"
+**Solution:** Just press **Y** when prompted - auto-installs everything
 
+### "No keywords loaded"
+**Solution:** 
 ```bash
-# Check logs
-tail -f logs.txt  # If logging enabled
-
-# Test manually
-curl -X POST http://localhost:5000/api/start
+# Create keywords.txt
+echo "target keyword" > keywords.txt
+echo "another keyword" >> keywords.txt
 ```
 
-### "Google may be blocking"
+### "Proxy fetch failed"
+**Solution:**
+- Check internet connection
+- Webber will retry automatically
+- Or add manual proxies to `proxies.txt`
 
-- ✅ Random delays are built-in
-- ✅ Use different keywords
-- ✅ Reduce frequency
-- ⚠️ Don't run too many searches too fast
+### "Connection timeout"
+**Solution:**
+- Normal for free proxies (auto-rotates)
+- Consider adding paid proxies to `proxies.txt`
 
-### Render app keeps sleeping
-
-```bash
-# Set up cron job to ping:
-curl https://your-app.onrender.com/api/status
-# Every 10 minutes
-```
-
-### Can't connect from app
-
-- ✅ Check API URL is correct
-- ✅ Ensure server is running
-- ✅ Test in browser first
-- ✅ Check CORS is enabled
+### Slow performance
+**Solution:**
+- Free proxies can be slow
+- Webber auto-detects and skips dead proxies
+- Add faster proxies to `proxies.txt` for better speed
 
 ---
 
-## 📊 Understanding Metrics
+## 📈 Performance Tips
 
-### Engagement Score
+### 1. Let Auto-Proxy Work
+Free proxies are fetched automatically - just let it run!
 
-Calculated as:
+### 2. Use Quality Keywords
+More specific keywords = better targeted traffic simulation
+
+### 3. Optimal Hardware
+- **Low RAM (< 4GB)**: 2-4 visits per cycle
+- **Medium RAM (4-8GB)**: 3-6 visits per cycle  
+- **High RAM (8-16GB)**: 4-8 visits per cycle
+- **Ultra RAM (16GB+)**: 5-10 visits per cycle
+
+### 4. Monitor Stats
+Watch the live dashboard - if IP rotations stop, proxies may be exhausted
+
+---
+
+## 🔐 Security & Privacy
+
+### What Webber Does
+- ✅ Rotates through proxies for IP diversity
+- ✅ Spoofs device fingerprints
+- ✅ Simulates realistic human behavior
+- ✅ Uses random timing patterns
+
+### What Webber Doesn't Do
+- ❌ Bypass authentication (not a hacking tool)
+- ❌ Exploit vulnerabilities
+- ❌ Steal data
+- ❌ Perform attacks
+
+**Webber is for authorized traffic simulation only.**
+
+---
+
+## 📚 Advanced Configuration
+
+### Custom Proxy Sources
+
+Edit `webber.py` to add your own proxy APIs:
+
+```python
+# Around line 350 in _fetch_free_proxies()
+# Add your custom proxy API endpoint
 ```
-score = (avg_time_minutes * 10) + (avg_pages_per_visit * 5)
-Max: 100
+
+### Hardware Override
+
+Force specific capacity:
+```python
+# Edit detect_hardware_capacity() function
+# Change capacity_map values
 ```
 
-| Score | Rating | Meaning |
-|-------|--------|---------|
-| 0-30 | 🔴 Low | Needs improvement |
-| 31-60 | 🟡 Medium | Getting better |
-| 61-80 | 🟢 Good | Solid engagement |
-| 81-100 | 🟢 Excellent | Outstanding! |
+### Behavior Tuning
 
-### What "Good" Looks Like
-
-| Metric | Poor | Average | Good | Excellent |
-|--------|------|---------|------|-----------|
-| Time/Visit | <30s | 30-60s | 1-3min | 3-5min |
-| Pages/Visit | 1 | 1-2 | 2-4 | 4+ |
-| Bounce Rate | >70% | 50-70% | 30-50% | <30% |
+Adjust randomization in `BehaviorRandomizer` class:
+```python
+# Reading speeds, attention spans, navigation patterns
+```
 
 ---
 
 ## 🤝 Contributing
 
-Contributions welcome! Please:
+Webber is designed for ethical security testing. Contributions welcome:
 
 1. Fork the repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
+2. Create feature branch
+3. Test thoroughly
+4. Submit pull request
 
 ---
 
-## 📄 License
+## 📜 Legal Disclaimer
 
-MIT License - feel free to use for any project!
+**BY USING WEBBER, YOU AGREE:**
 
----
+1. You have explicit authorization to test the target
+2. You will use this tool ethically and legally
+3. You accept full responsibility for your actions
+4. You will not violate any Terms of Service
+5. You will respect rate limits and robots.txt when appropriate
 
-## 🌟 Support
-
-- ⭐ Star this repo if it helped you!
-- 🐛 Report issues on GitHub
-- 💡 Suggest features via Issues
-- 📧 Contact: your@email.com
-
----
-
-## 🎯 Roadmap
-
-- [ ] Add proxy rotation support
-- [ ] Multiple website support in single instance
-- [ ] Advanced analytics dashboard
-- [ ] Configurable behavior patterns
-- [ ] WordPress plugin version
-- [ ] Docker support
-- [ ] Detailed logging system
+**THE AUTHOR IS NOT RESPONSIBLE FOR MISUSE OF THIS TOOL.**
 
 ---
 
-<div align="center">
+## 📞 Support
 
-**Made with ❤️ for better web engagement**
+### Common Issues
+- Check the Troubleshooting section above
+- Ensure you have Python 3.7+
+- Verify internet connection for proxy fetching
 
-[⬆ Back to Top](#-website-engagement-bot-api)
+### HTB/CTF Specific
+- Use `--robots-mode ignore` for challenges
+- Use `--no-consent` to skip prompts
+- Let auto-proxy system handle IP rotation
 
-</div>
+---
+
+## 🎉 Quick Reference
+
+```bash
+# Minimal HTB command (auto-everything)
+python3 webber.py -t https://target.htb -w keywords.txt --no-consent --robots-mode ignore
+
+# With manual proxies
+python3 webber.py -t https://target.htb -w keywords.txt
+
+# Production testing
+python3 webber.py -t https://site.com -w keywords.txt --robots-mode respect
+```
+
+---
+
+## 📊 Stats Explained
+
+| Stat | Meaning |
+|------|---------|
+| **Cycles** | Number of complete traffic simulation rounds |
+| **Total Visits** | Individual page visits performed |
+| **Pages Viewed** | Total pages loaded (including internal navigation) |
+| **Time Spent** | Cumulative time spent "reading" content |
+| **Unique Sessions** | Different browser sessions created |
+| **Identity Rotations** | Times device fingerprint was changed |
+| **IP Rotations** | Times proxy was switched |
+| **Proxy Pool** | Number of working proxies available |
+
+---
+
+## ⭐ Features at a Glance
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Auto-Install | ✅ | Dependencies install automatically |
+| Auto-Proxy | ✅ | Fetches 20+ free proxies |
+| Device Spoofing | ✅ | 30+ different devices |
+| IP Rotation | ✅ | Automatic proxy switching |
+| Human Behavior | ✅ | Realistic browsing patterns |
+| Hardware Detection | ✅ | Optimizes for your device |
+| Live Dashboard | ✅ | Real-time statistics |
+| Cross-Platform | ✅ | Linux, Mac, Windows, Termux |
+| Ethical Prompts | ✅ | Forces responsible usage |
+| robots.txt Check | ✅ | Respects website preferences |
+
+---
+
+**Made for ethical hackers, by ethical hackers. Happy (legal) testing! 🛡️**
+
+```
+    ╦ ╦╔═╗╔╗ ╔╗ ╔═╗╦═╗
+    ║║║║╣ ╠╩╗╠╩╗║╣ ╠╦╝
+    ╚╩╝╚═╝╚═╝╚═╝╚═╝╩╚═
+```
